@@ -21,7 +21,7 @@ jobs:
       needs_patch: ${{ steps.version-check.outputs.needs_patch }}
       release_tag: ${{ steps.version-check.outputs.release_tag }}
     env:
-      IOSEVKA_RELEASE_METADATA_PATH: ${{ env.WORK_DIR }}/iosevka-latest-release.json
+      IOSEVKA_RELEASE_METADATA_PATH: "${{ env.WORK_DIR }}/iosevka-latest-release.json"
     steps:
       - name: Create work dir
         run: mkdir -p ${{ env.WORK_DIR }}
