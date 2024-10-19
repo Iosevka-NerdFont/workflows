@@ -5,6 +5,13 @@ on:
 permissions:
   contents: write
 
+env:
+  WORK_DIR: "/tmp/iosevka-patch"
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   setup:
     runs-on: ubuntu-latest
