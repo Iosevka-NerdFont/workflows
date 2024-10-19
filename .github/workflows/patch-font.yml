@@ -1,8 +1,6 @@
 name: "Patch Iosevka"
-# on:
-#   workflow_dispatch: {} # Allow to run manually the workflow
-#   schedule:
-#     - cron: "38 16 * * 5" # Run at 16:38 UTC on Friday
+on:
+  workflow_call: {}
 
 permissions:
   contents: write
