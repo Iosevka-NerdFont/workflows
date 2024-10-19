@@ -91,14 +91,14 @@ jobs:
           curl -fsSL \
             -H "Accept: application/octet-stream" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            -o "${{ env.WORK_DIR }}/${FONT_PATCHER_NAME}" \
+            -o "${{ env.WORK_DIR }}/${{ env.FONT_PATCHER_NAME }}" \
             "${FONT_PATCHER_URL}"
-          unzip -o "${{ env.WORK_DIR }}/${FONT_PATCHER_NAME}" -d "${{ env.FONT_PATCHER_NAME }}"
+          unzip -o "${{ env.WORK_DIR }}/${{ env.FONT_PATCHER_NAME }}" -d "${{ env.WORK_DIR }}/${{ env.FONT_PATCHER_SCRIPT }}"
       - name: Upload FontPatcher
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.FONT_PATCHER_NAME }}
-          path: ${{ env.WORK_DIR }}/${{ env.FONT_PATCHER_NAME }}
+          name: ${{ env.FONT_PATCHER_SCRIPT }}
+          path: ${{ env.WORK_DIR }}/${{ env.FONT_PATCHER_SCRIPT }}
 
   patch:
     needs: setup_tools
