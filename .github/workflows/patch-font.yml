@@ -166,7 +166,7 @@ jobs:
         uses: geekyeggo/delete-artifact@v5
         with:
           name: |
-            ${{ env.FONT_PATCHER_NAME }}
+            ${{ env.FONT_PATCHER_SCRIPT }}
             ${{ env.FONTFORGE_NAME }}
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -183,7 +183,7 @@ jobs:
         run: |
           git add --all
           git commit -m "chore: update patched fonts"
-          git tag "${{ needs.patch.outputs.release_tag }}" -m "Patched Iosevka ${{ needs.patch.outputs.release_tag }}"
+          git tag "${{ needs.check.outputs.release_tag }}" -m "Patched ${{  }} ${{ needs.check.outputs.release_tag }}"
           git push --follow-tags
 
 
