@@ -1,6 +1,6 @@
 name: "Patch Iosevka"
 on:
-  workflow_call: {}
+  workflow_call:
 
 permissions:
   contents: write
