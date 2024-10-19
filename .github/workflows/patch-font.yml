@@ -7,6 +7,9 @@ permissions:
 
 env:
   WORK_DIR: "/tmp/iosevka-patch"
+  IOSEVKA_RELEASE_METADATA_PATH: "/tmp/iosevka-patch/iosevka-latest-release.json"
+  BASE_INPUT_DIR: "/tmp/iosevka-patch/input"
+  BASE_OUTPUT_DIR: "/tmp/iosevka-patch/output"
   FONTFORGE_NAME: "FontForge.AppImage"
   FONT_PATCHER_SCRIPT: "font-patcher"
 
@@ -20,8 +23,6 @@ jobs:
     outputs:
       needs_patch: ${{ steps.version-check.outputs.needs_patch }}
       release_tag: ${{ steps.version-check.outputs.release_tag }}
-    env:
-      IOSEVKA_RELEASE_METADATA_PATH: "${{ env.WORK_DIR }}/iosevka-latest-release.json"
     steps:
       - name: Create work dir
         run: mkdir -p ${{ env.WORK_DIR }}
@@ -55,8 +56,10 @@ jobs:
           echo "needs_patch=true" >> "${GITHUB_OUTPUT}"
 
   setup_tools:
-    if: ${{ jobs.check.outputs.needs_patch }}
     needs: check
+    if: ${{ needs.check.outputs.needs_patch }}
+    outputs:
+      needs_patch: ${{ needs.check.outputs.needs_patch }}
     runs-on: ubuntu-latest
     steps:
       - name: Create work dir
@@ -98,12 +101,11 @@ jobs:
           path: ${{ env.WORK_DIR }}/${{ env.FONT_PATCHER_NAME }}
 
   patch:
-    if: ${{ jobs.check.outputs.needs_patch }}
     needs: setup_tools
+    if: ${{ needs.setup_tools.outputs.needs_patch }}
+    outputs:
+      needs_patch: ${{ needs.setup_tools.outputs.needs_patch }}
     runs-on: ubuntu-latest
-    env:
-      BASE_INPUT_DIR: ${{ env.WORK_DIR }}/input
-      BASE_OUTPUT_DIR: ${{ env.WORK_DIR }}/output
     steps:
       - name: Install libfuse2
         run: |
@@ -157,8 +159,8 @@ jobs:
 
   commit:
     runs-on: ubuntu-latest
-    if: ${{ jobs.check.outputs.needs_patch }}
     needs: patch
+    if: ${{ needs.patch.outputs.needs_patch }}
     steps:
       - name: Remove temporary artifacts
         uses: geekyeggo/delete-artifact@v5
