@@ -147,42 +147,40 @@ jobs:
         run: |
           echo "Patching ${{ needs.check.outputs.asset_name }} into ${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
           mkdir -p "${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
-          ls -Rlh "${{ env.BASE_INPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
-          # find "${{ env.BASE_INPUT_DIR }}/${{ needs.check.outputs.asset_name }}" -type f
-          # | \
-          # parallel echo "Patching {}" \; "${GITHUB_WORKSPACE}/${{ needs.setup.outputs.font_forge_name }}" -script "${GITHUB_WORKSPACE}/font-patcher" "{}" --quiet --no-progressbars --complete -out "${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
-  #     - name: Share output
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: ${{ needs.check.outputs.asset_name }}
-  #         path: ${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}
-  #         retention-days: 1
-  #
-  # commit:
-  #   runs-on: ubuntu-latest
-  #   needs: [check, patch]
-  #   if: ${{ needs.check.outputs.needs_patch }}
-  #   steps:
-  #     - name: Remove temporary artifacts
-  #       uses: geekyeggo/delete-artifact@v5
-  #       with:
-  #         name: |
-  #           ${{ env.FONT_PATCHER_SCRIPT }}
-  #           ${{ env.FONTFORGE_NAME }}
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #     - name: Remove old font files
-  #       run: |
-  #         find ./ -mindepth 1 -maxdepth 1 -type d -not -name '.*' -exec rm -r {} \;
-  #     - name: Load artifacts
-  #       uses: actions/download-artifact@v4
-  #     - name: Git config
-  #       run: |
-  #         git config --global user.name "CI"
-  #         git config --global user.email "${{ github.triggering_actor }}@users.noreply.github.com"
-  #     - name: Commit, Tag and Push
-  #       run: |
-  #         git add --all
-  #         git commit -m "chore: update patched fonts"
-  #         git tag "${{ needs.check.outputs.release_tag }}" -m "Patched ${{ needs.check.outputs.asset_name }} ${{ needs.check.outputs.release_tag }}"
-  #         git push --follow-tags
+          find "${{ env.BASE_INPUT_DIR }}/${{ needs.check.outputs.asset_name }}" -type f | \
+          parallel echo "Patching {}" \; "${GITHUB_WORKSPACE}/${{ env.FONTFORGE_NAME }}" -script "${GITHUB_WORKSPACE}/font-patcher" "{}" --quiet --no-progressbars --complete -out "${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
+      - name: Share output
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.check.outputs.asset_name }}
+          path: ${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}
+          retention-days: 1
+
+  commit:
+    runs-on: ubuntu-latest
+    needs: [check, patch]
+    if: ${{ needs.check.outputs.needs_patch }}
+    steps:
+      - name: Remove temporary artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            ${{ env.FONT_PATCHER_SCRIPT }}
+            ${{ env.FONTFORGE_NAME }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Remove old font files
+        run: |
+          find ./ -mindepth 1 -maxdepth 1 -type d -not -name '.*' -exec rm -r {} \;
+      - name: Load artifacts
+        uses: actions/download-artifact@v4
+      - name: Git config
+        run: |
+          git config --global user.name "CI"
+          git config --global user.email "${{ github.triggering_actor }}@users.noreply.github.com"
+      - name: Commit, Tag and Push
+        run: |
+          git add --all
+          git commit -m "chore: update patched fonts"
+          git tag "${{ needs.check.outputs.release_tag }}" -m "Patched ${{ needs.check.outputs.asset_name }} ${{ needs.check.outputs.release_tag }}"
+          git push --follow-tags
