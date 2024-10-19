@@ -23,6 +23,7 @@ jobs:
     outputs:
       needs_patch: ${{ steps.version-check.outputs.needs_patch }}
       release_tag: ${{ steps.version-check.outputs.release_tag }}
+      asset_name: ${{ steps.version-check.outputs.asset_name }}
     steps:
       - name: Create work dir
         run: mkdir -p ${{ env.WORK_DIR }}
@@ -54,6 +55,7 @@ jobs:
             exit 0
           fi
           echo "needs_patch=true" >> "${GITHUB_OUTPUT}"
+          echo "asset_name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
 
   setup_tools:
     needs: check
@@ -124,6 +126,8 @@ jobs:
         run: |
           RELEASE_TAG="${{ needs.check.outputs.release_tag  }}"
           IOSEVKA_VERSION=${RELEASE_TAG#v}
+          echo "asset_name=${{ needs.check.outputs.asset_name }}"
+          exit 1
           ASSET_NAME="$(echo "${{ matrix.font }}" | cut -d ',' -f 1)"
           ASSET_NAME="${ASSET_NAME#PkgTTF-}"
           ASSET_NAME="${ASSET_NAME%-"${IOSEVKA_VERSION}".zip}"
