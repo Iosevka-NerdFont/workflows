@@ -124,8 +124,8 @@ jobs:
       - name: Download font files
         id: download-font
         run: |
-          RELEASE_TAG="${{ needs.check.outputs.release_tag  }}"
-          IOSEVKA_VERSION=${RELEASE_TAG#v}
+          RELEASE_TAG="${{ needs.check.outputs.release_tag }}"
+          IOSEVKA_VERSION="${RELEASE_TAG#v}"
           echo "asset_name=${{ needs.check.outputs.asset_name }}"
           exit 1
           ASSET_NAME="$(echo "${{ matrix.font }}" | cut -d ',' -f 1)"
@@ -183,7 +183,7 @@ jobs:
         run: |
           git add --all
           git commit -m "chore: update patched fonts"
-          git tag "${{ needs.check.outputs.release_tag }}" -m "Patched ${{  }} ${{ needs.check.outputs.release_tag }}"
+          git tag "${{ needs.check.outputs.release_tag }}" -m "Patched ${{ needs.check.outputs.asset_name }} ${{ needs.check.outputs.release_tag }}"
           git push --follow-tags
 
 
