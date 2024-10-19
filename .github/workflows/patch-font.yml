@@ -56,6 +56,7 @@ jobs:
           fi
           echo "needs_patch=true" >> "${GITHUB_OUTPUT}"
           echo "asset_name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
+          echo "asset_name=$(grep 'asset_name=' ${GITHUB_OUTPUT})"
 
   setup_tools:
     needs: check
@@ -120,16 +121,22 @@ jobs:
           mkdir -p ${{ env.BASE_INPUT_DIR }}
           mkdir -p ${{ env.BASE_OUTPUT_DIR }}
           chmod u+x ${GITHUB_WORKSPACE}/${{ env.FONTFORGE_NAME }}
-
       - name: Download font files
         id: download-font
         run: |
           RELEASE_TAG="${{ needs.check.outputs.release_tag }}"
           IOSEVKA_VERSION="${RELEASE_TAG#v}"
-          echo "asset_name=${{ needs.check.outputs.asset_name }}"
-          exit 1
-          ASSET_URL="$(echo "${{ matrix.font }}" | cut -d ',' -f 2)"
+          ASSET_URL="$(curl -fsSL \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/be5invis/Iosevka/releases/tags/${{ needs.check.outputs.release_tag }} | \
+            eval jq -r '.assets | map(select(.name | test("PkgTTF-${{ needs.check.outputs.asset_name }}-${IOSEVKA_VERSION}\\.zip"))) | .[0].url'
+          )"
           echo "ASSET_URL=${ASSET_URL}"
+          if [ "${ASSET_URL}" == "null" ] ; then
+            echo "Asset 'PkgTTF-${{ needs.check.outputs.asset_name }}-${IOSEVKA_VERSION}.zip' not found" >&2
+            exit 1
+          fi
           curl -fsSL \
             -H "Accept: application/octet-stream" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -137,18 +144,16 @@ jobs:
             "${ASSET_URL}"
           unzip -o "${{ env.BASE_INPUT_DIR }}/${{ needs.check.outputs.asset_name }}.zip" -d "${{ env.BASE_INPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
       - name: Patch fonts
-        id: patch-font
         run: |
-          echo "Patching ${ASSET_NAME} into ${BASE_OUTPUT_DIR}/${ASSET_NAME}"
-          mkdir -p "${BASE_OUTPUT_DIR}/${ASSET_NAME}"
-          find "${BASE_INPUT_DIR}/${ASSET_NAME}" -type f | \
-          parallel echo "Patching {}" \; "${GITHUB_WORKSPACE}/${{ needs.setup.outputs.font_forge_name }}" -script "${GITHUB_WORKSPACE}/font-patcher" "{}" --quiet --no-progressbars --complete -out "${BASE_OUTPUT_DIR}/${ASSET_NAME}"
-          echo "output_dir=${BASE_OUTPUT_DIR}/${ASSET_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "Patching ${{ needs.check.outputs.asset_name }} into ${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
+          mkdir -p "${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
+          find "${{ env.BASE_INPUT_DIR }}/${{ needs.check.outputs.asset_name }}" -type f | \
+          parallel echo "Patching {}" \; "${GITHUB_WORKSPACE}/${{ needs.setup.outputs.font_forge_name }}" -script "${GITHUB_WORKSPACE}/font-patcher" "{}" --quiet --no-progressbars --complete -out "${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}"
       - name: Share output
         uses: actions/upload-artifact@v4
         with:
           name: ${{ needs.check.outputs.asset_name }}
-          path: ${{ steps.patch-font.outputs.output_dir }}
+          path: ${{ env.BASE_OUTPUT_DIR }}/${{ needs.check.outputs.asset_name }}
           retention-days: 1
 
   commit:
