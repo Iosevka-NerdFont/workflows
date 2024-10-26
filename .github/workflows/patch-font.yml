@@ -23,21 +23,6 @@ defaults:
     shell: bash
 
 jobs:
-  calc_asset_name:
-    runs-on: ubuntu-latest
-    outputs:
-      asset_name: ${{ steps.calc.outputs.asset_name }}
-    steps:
-      - name: Forward given asset name or calculate it with repository variables
-        id: calc
-        run: |
-          if [ -n "${{ inputs.asset_name }}" ]; then
-            echo "asset_name=${{ inputs.asset_name }}" >> "${GITHUB_OUTPUT}"
-          else
-            echo "asset_name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
-          fi
-          echo "asset_name=$(grep 'asset_name=' ${GITHUB_OUTPUT})"
-
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -74,6 +59,23 @@ jobs:
             exit 0
           fi
           echo "needs_patch=true" >> "${GITHUB_OUTPUT}"
+
+  calc_asset_name:
+    needs: check
+    if: ${{ needs.check.outputs.needs_patch == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      asset_name: ${{ steps.calc.outputs.asset_name }}
+    steps:
+      - name: Forward given asset name or calculate it with repository variables
+        id: calc
+        run: |
+          if [ -n "${{ inputs.asset_name }}" ]; then
+            echo "asset_name=${{ inputs.asset_name }}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "asset_name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "asset_name=$(grep 'asset_name=' ${GITHUB_OUTPUT})"
 
   setup_tools:
     needs: check
