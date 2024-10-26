@@ -77,7 +77,7 @@ jobs:
 
   setup_tools:
     needs: check
-    if: ${{ needs.check.outputs.needs_patch }}
+    if: ${{ needs.check.outputs.needs_patch == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Create work dir
@@ -120,7 +120,7 @@ jobs:
 
   patch:
     needs: [calc_asset_name, check, setup_tools]
-    if: ${{ needs.check.outputs.needs_patch }}
+    if: ${{ needs.check.outputs.needs_patch == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Install libfuse2
@@ -176,7 +176,7 @@ jobs:
   commit:
     runs-on: ubuntu-latest
     needs: [check, calc_asset_name, patch]
-    if: ${{ needs.check.outputs.needs_patch }}
+    if: ${{ needs.check.outputs.needs_patch == 'true' }}
     steps:
       - name: Remove temporary artifacts
         uses: geekyeggo/delete-artifact@v5
