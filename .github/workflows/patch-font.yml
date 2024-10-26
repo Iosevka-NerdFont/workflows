@@ -35,8 +35,8 @@ jobs:
             echo "asset_name=${{ inputs.asset_name }}" >> "${GITHUB_OUTPUT}"
           else
             echo "asset_name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
-            echo "asset_name=$(grep 'asset_name=' ${GITHUB_OUTPUT})"
           fi
+          echo "asset_name=$(grep 'asset_name=' ${GITHUB_OUTPUT})"
 
   check:
     runs-on: ubuntu-latest
