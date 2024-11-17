@@ -17,6 +17,7 @@ env:
   BASE_OUTPUT_DIR: "/tmp/iosevka-patch/output"
   FONTFORGE_NAME: "FontForge.AppImage"
   FONT_PATCHER_SCRIPT: "font-patcher"
+  CURL_CMD: "curl -fsSL --retry 5 --retry-all-errors"
 
 defaults:
   run:
@@ -33,7 +34,7 @@ jobs:
         run: mkdir -p ${{ env.WORK_DIR }}
       - name: Get Iosevka latest release metadata
         run: |
-          curl -fsSL \
+          ${{ env.CURL_CMD }} \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/be5invis/Iosevka/releases/latest > "${{ env.IOSEVKA_RELEASE_METADATA_PATH }}"
@@ -42,7 +43,7 @@ jobs:
         run: |
           RELEASE_TAG="$(jq -r '.tag_name' "${{ env.IOSEVKA_RELEASE_METADATA_PATH }}")"
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
-          curl -fsSL \
+          ${{ env.CURL_CMD }} \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/${{ github.repository }}/tags | jq 'map(.name)' > latest_versions.json
@@ -86,11 +87,11 @@ jobs:
         run: mkdir -p ${{ env.WORK_DIR }}
       - name: Download latest FontForge AppImage
         run: |
-          FONTFORGE_URL="$(curl -fsSL \
+          FONTFORGE_URL="$(${{ env.CURL_CMD }} \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/fontforge/fontforge/releases/latest | jq -r '.assets[] | select(.name | test("FontForge.*\\.AppImage")) | .url')"
-          curl -fsSL \
+          ${{ env.CURL_CMD }} \
             -H "Accept: application/octet-stream" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             -o "${{ env.WORK_DIR }}/${{ env.FONTFORGE_NAME }}" \
@@ -104,11 +105,11 @@ jobs:
         env:
           FONT_PATCHER_NAME: FontPatcher.zip
         run: |
-          FONT_PATCHER_URL="$(curl -fsSL \
+          FONT_PATCHER_URL="$(${{ env.CURL_CMD }} \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest | jq -r '.assets[] | select(.name == "FontPatcher.zip") | .url')"
-          curl -fsSL \
+          ${{ env.CURL_CMD }} \
             -H "Accept: application/octet-stream" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             -o "${{ env.WORK_DIR }}/${{ env.FONT_PATCHER_NAME }}" \
@@ -145,7 +146,7 @@ jobs:
         run: |
           RELEASE_TAG="${{ needs.check.outputs.release_tag }}"
           IOSEVKA_VERSION="${RELEASE_TAG#v}"
-          ASSET_URL="$(curl -fsSL \
+          ASSET_URL="$(${{ env.CURL_CMD }} \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/be5invis/Iosevka/releases/tags/${{ needs.check.outputs.release_tag }} | \
@@ -156,7 +157,7 @@ jobs:
             echo "Asset 'PkgTTF-${{ needs.calc_asset_name.outputs.asset_name }}-${IOSEVKA_VERSION}.zip' not found" >&2
             exit 1
           fi
-          curl -fsSL \
+          ${{ env.CURL_CMD }} \
             -H "Accept: application/octet-stream" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             -o "${{ env.BASE_INPUT_DIR }}/${{ needs.calc_asset_name.outputs.asset_name }}.zip" \
