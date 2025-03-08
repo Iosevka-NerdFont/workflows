@@ -17,7 +17,7 @@ env:
   BASE_OUTPUT_DIR: "/tmp/iosevka-patch/output"
   FONTFORGE_NAME: "FontForge.AppImage"
   FONT_PATCHER_SCRIPT: "font-patcher"
-  CURL_CMD: "curl -fsSL --retry 5 --retry-all-errors -H \"Authorization: Bearer $GITHUB_TOKEN\""
+  CURL_CMD: "curl -fsSL --retry 5 --retry-all-errors -H \"Authorization: Bearer \$GITHUB_TOKEN\""
 
 defaults:
   run:
